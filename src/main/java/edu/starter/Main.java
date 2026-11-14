@@ -14,6 +14,7 @@ public final class Main {
         p.setDefence(false);
         if (result){
             System.out.println("You win! 1/2");
+            b.reward(p);
             enemy e2 = new enemy(45,10);
             battle c = new battle(p, e2);
             System.out.println("Encounter 2");
@@ -29,8 +30,6 @@ public final class Main {
     }
     public static void main(String[] args) {
         new Main();
-        
-
         
         }
     }
@@ -49,7 +48,14 @@ class player {
     }
 
     // --- Getters & Setters ---
+/** 
+@pre i > 0
+@post hp > 0
+@in hp > 0 
+ */
+    public void heal(int i) {hp = Math.min(100, hp + i);}
     public int getdamage() {return damage; }
+/** @pre damage > 0*/    
     public void setdamage(int damage) {this.damage = damage;}
     public int getHp() { return hp; }
     public int getRec() { return rec; }
@@ -60,7 +66,11 @@ class player {
 
     public int get_rec(){ return rec; }
     public int get_hp(){ return hp; }
-
+    /**
+     * @in hp => 0
+     * @pre i => 0
+     * @post hp => hp - i
+     */
     public void takedamage(int i){
         if ( defence ){
             i = Math.max(i -5,0);
@@ -73,20 +83,35 @@ class player {
     }
     
     public void alive(){ }
-    
+   
+    /**
+     * @pre e != null
+     * @post e.getHp() <= @pre(e.getHp())
+     */
     public void attack(enemy e){
         e.takedamage(damage);
     }
+
     public void defend(){
         setDefence(true);
     }
     
+    /**
+     * @pre e != null
+     * @pre getRec() >= 3
+     * @post e.getHp() <= @pre(e.getHp())
+     * @post rec == @pre(rec) - 3
+     */
     public void special(enemy e){
         if (getRec() >= 3){
             rec = getRec() - 3;
             e.takedamage(15);
             }
     }
+    
+    /**
+     * @in rec >= 0 && rec <= 10
+     */
     public void recover(){
         rec = Math.min(getRec() + 3, 10);
     }
@@ -149,13 +174,27 @@ class enemy {
     private int hp = 100;
     private boolean defence = false;
     private boolean alive = true;
+
+    /**
+     * @pre hp > 0
+     * @pre damage > 0
+     * @post this.hp == hp
+     * @post this.damage == damage
+     */
     public enemy(int hp, int damage){
         this.hp = hp;
         this.damage = damage;
     }
 
     // --- Getters & Setters ---
+    /** 
+     * @pre i > 0
+     * @post hp > 0 
+     */
+    public void heal(int i) {hp = Math.min(100, hp + i);}
     public int getdamage() {return damage;}
+
+    /** @pre damage > 0*/
     public void setdamage(int damage) {this.damage = damage;}
     public int getHp() { return hp; }
     public boolean isDefence() { return defence; }
@@ -163,7 +202,11 @@ class enemy {
     public boolean isAlive() { return alive; }
     public void setAlive(boolean alive) { this.alive = alive; }
 
-
+    /**
+     * @in hp => 0
+     * @pre i => 0
+     * @post hp => hp - i
+     */
     public void takedamage(int i){
         if (defence) {
             i = Math.max(0,i-5);
@@ -174,6 +217,11 @@ class enemy {
             setAlive(false);
         }
     }
+
+    /**
+     * @pre p != null
+     * @post p.getHp() <= @pre(p.getHp())
+     */
     public void counterattack(player p){
     p.takedamage(damage);
     }
@@ -187,6 +235,12 @@ class battle {
     private player p;
     private enemy e;
 
+    /**
+     * @pre p != null
+     * @pre e != null
+     * @post this.p == p
+     * @post this.e == e
+     */
     public battle(player p, enemy e){
         this.p = p;
         this.e = e;
@@ -225,5 +279,46 @@ class battle {
 
         return false;
     }
+
+    /**
+     * @pre p != null
+     */
+    public static void reward(player p){
+    System.out.println("choose your reward!: recovery or power");
+    Scanner reader = new Scanner(System.in);
+    String word = reader.next();
+    reward_type rewardc = null;
+    if (word.equals("recovery")) {
+            rewardc = reward_type.recovery;
+        } else if (word.equals("power")) {
+            rewardc = reward_type.power;
+        } else {
+            System.out.println("invalid choice try again");
+            reward(p);
+            return;
+        }
+   
+    switch (rewardc) {
+        case recovery:
+            System.out.println("You chose recovery!");
+            p.heal(25);
+            break;
+            
+        case power:
+            System.out.println("You chose power!");
+            p.setdamage(12);
+            break;
+        default:
+            System.out.println("invalid choise try again");
+            reward(p);
+            break;
+    }
 }
+   
+}
+enum reward_type{
+    recovery,
+    power
+}
+
     
